@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title></title>
+  <!-- Polyfill for WebRTC for all browsers https://github.com/Temasys/AdapterJS -->
+  <script src="adapter.min.js"></script>
+  <!-- Polyfill from google for methods https://github.com/webrtc/adapter -->
+  <script src="adapter.js"></script>
+</head>
+<body>
+<video src="" controls autoplay></video>
+<div id="errorMsg"></div>
+<script>
+  'use strict';
+
+  // Put variables in global scope to make them available to the browser console.
+  var video = document.querySelector('video');
+  var constraints = window.constraints = {
+    audio: true,
+    video: true
+  };
+  var errorElement = document.querySelector('#errorMsg');
+
+  //use method given from Temasys-adapter. It does not support promises. https://developer.mozilla.org/en-US/docs/Web/API/Navigator/getUserMedia
+  getUserMedia(constraints, function(stream) {
+        var videoTracks = stream.getAudioTracks();
+        console.log('Got stream with constraints:', constraints);
+        console.log('Using video device: ' + videoTracks[0].label);
+        stream.onended = function() {
+          console.log('Stream ended');
+        };
+        window.stream = stream; // make variable available to browser console
+        video.srcObject = stream;
+      }, function(error) {
+        if (error.name === 'ConstraintNotSatisfiedError') {
+          errorMsg('The resolution ' + constraints.video.width.exact + 'x' +
+              constraints.video.width.exact + ' px is not supported by your device.');
+        } else if (error.name === 'PermissionDeniedError') {
+          errorMsg('Permissions have not been granted to use your camera and ' +
+              'microphone, you need to allow the page access to your devices in ' +
+              'order for the demo to work.');
+        }
+        errorMsg('getUserMedia error: ' + error.name, error);
+      });
+
+  function errorMsg(msg, error) {
+    errorElement.innerHTML += '<p>' + msg + '</p>';
+    if (typeof error !== 'undefined') {
+      console.error(error);
+    }
+  }
+</script>
+</body>
+</html>
